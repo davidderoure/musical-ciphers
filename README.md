@@ -50,6 +50,21 @@ The tutorial has five parts:
 
 ---
 
+## Interactive web demo
+
+A browser-based demo lets you type any text and instantly see the score and hear the cipher played:
+
+```bash
+cd webapp
+pip install flask
+python app.py
+# open http://localhost:5000
+```
+
+Features: live score rendering (abcjs), ABC notation display, audio playback, tempo control, and a cipher reference table that highlights the letters you are encoding.
+
+---
+
 ## Getting started
 
 ### Prerequisites

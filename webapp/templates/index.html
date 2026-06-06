@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Porta's Musical Cipher</title>
+  <script src="https://cdn.jsdelivr.net/npm/abcjs@6.2.3/dist/abcjs-min.js"></script>
+  <style>
+    /* ── Typography & base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: #f7f4ee;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3 { font-weight: normal; }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    header {
+      background: #1a2744;
+      color: #e8e0d0;
+      padding: 1.8rem 2.5rem;
+      border-bottom: 4px solid #8b6914;
+    }
+    header h1 { font-size: 1.9rem; letter-spacing: 0.03em; margin-bottom: 0.3rem; }
+    header .source {
+      font-size: 0.88rem;
+      color: #b0a898;
+      font-style: italic;
+    }
+    header .source a { color: #c8b87a; text-decoration: none; }
+    header .source a:hover { text-decoration: underline; }
+
+    /* ── Main layout ─────────────────────────────────────────────────── */
+    main { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* ── Input section ───────────────────────────────────────────────── */
+    .input-section {
+      background: #fff;
+      border: 1px solid #d4c9b0;
+      border-radius: 6px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .input-section label {
+      display: block;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      color: #444;
+    }
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    #plaintext {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.6rem 0.9rem;
+      font-size: 1.3rem;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.1em;
+      border: 2px solid #c0b090;
+      border-radius: 4px;
+      background: #fffdf7;
+      text-transform: uppercase;
+    }
+    #plaintext:focus { outline: none; border-color: #1a2744; }
+
+    .tempo-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 0.8rem;
+      font-size: 0.88rem;
+      color: #555;
+    }
+    #tempo { width: 120px; accent-color: #1a2744; }
+    #tempo-val { font-family: monospace; font-weight: bold; min-width: 2.5em; }
+
+    .hint {
+      margin-top: 0.6rem;
+      font-size: 0.8rem;
+      color: #888;
+      font-style: italic;
+    }
+    #error-msg {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #b00;
+      min-height: 1.2em;
+    }
+
+    /* ── Output panels ───────────────────────────────────────────────── */
+    .output-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 680px) { .output-grid { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: #fff;
+      border: 1px solid #d4c9b0;
+      border-radius: 6px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .panel h2 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #1a2744;
+      border-bottom: 1px solid #e0d8c8;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.9rem;
+    }
+
+    /* ABC notation panel */
+    #abc-output {
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      background: #f0ece0;
+      border: 1px solid #d4c9b0;
+      border-radius: 4px;
+      padding: 0.8rem;
+      min-height: 8rem;
+      color: #2a2a2a;
+    }
+    /* highlight field names */
+    .abc-field { color: #1a2744; font-weight: bold; }
+
+    /* Score panel */
+    #score-output {
+      min-height: 120px;
+      overflow-x: auto;
+    }
+    /* abcjs injects an svg — make it responsive */
+    #score-output svg { max-width: 100%; height: auto; }
+
+    /* Play controls */
+    .play-controls {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 0.9rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 0.45rem 1.1rem;
+      font-family: Georgia, serif;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-play  { background: #1a2744; color: #e8e0d0; }
+    .btn-play:hover  { background: #2a3a60; }
+    .btn-stop  { background: #6b2020; color: #e8e0d0; }
+    .btn-stop:hover  { background: #8b2020; }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+    #play-status { font-size: 0.82rem; color: #666; font-style: italic; }
+
+    /* ── Cipher table ─────────────────────────────────────────────────── */
+    .cipher-section h2 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #1a2744;
+      margin-bottom: 1rem;
+    }
+    .cipher-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 500px) { .cipher-grid { grid-template-columns: 1fr; } }
+
+    .cipher-half {
+      background: #fff;
+      border: 1px solid #d4c9b0;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .cipher-half h3 {
+      font-size: 0.85rem;
+      padding: 0.5rem 0.9rem;
+      letter-spacing: 0.05em;
+    }
+    .ascending-head  { background: #1a2744; color: #e8e0d0; }
+    .descending-head { background: #5a3010; color: #f0e8d8; }
+
+    .cipher-half table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .cipher-half td {
+      padding: 0.3rem 0.9rem;
+      border-bottom: 1px solid #ede8dc;
+    }
+    .cipher-half tr:last-child td { border-bottom: none; }
+    .cipher-half tr:hover td { background: #f5f0e4; }
+    .letter-cell {
+      font-family: 'Courier New', monospace;
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: #1a2744;
+      width: 2em;
+    }
+    .note-cell  { color: #444; font-family: 'Courier New', monospace; }
+    .dur-cell   { color: #888; font-size: 0.78rem; }
+
+    /* highlight active letters in table */
+    .cipher-half tr.active td { background: #fff3c0; }
+    .cipher-half tr.active .letter-cell { color: #8b6914; }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    footer {
+      margin-top: 2.5rem;
+      padding: 1rem 0;
+      border-top: 1px solid #d4c9b0;
+      font-size: 0.78rem;
+      color: #888;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Porta's Musical Cipher</h1>
+  <p class="source">
+    Giambattista della Porta, <em>De Furtivis Literarum Notis, vulgo de Ziferis, libri quinque</em>
+    (Naples: Giovanni Battista Sottile, 1602), p. 156, Cap. XVI —
+    <em>"Musicis notulis quomodo sine suspicione vti possimus"</em>
+  </p>
+</header>
+
+<main>
+
+  <!-- ── Input ──────────────────────────────────────────────────────── -->
+  <section class="input-section">
+    <label for="plaintext">Enter text to encode (Latin 22-letter alphabet):</label>
+    <div class="input-row">
+      <input type="text" id="plaintext" placeholder="e.g. BODLEIAN" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="tempo-row">
+      <label for="tempo">Tempo:</label>
+      <input type="range" id="tempo" min="20" max="120" value="50">
+      <span id="tempo-val">50</span> BPM
+    </div>
+    <p class="hint">Letters are uppercased automatically. J→I, K→I, V→U, W→U (Latin alphabet conventions). Spaces are ignored.</p>
+    <div id="error-msg"></div>
+  </section>
+
+  <!-- ── Output: ABC + Score ────────────────────────────────────────── -->
+  <div class="output-grid">
+
+    <div class="panel">
+      <h2>ABC Notation</h2>
+      <pre id="abc-output"></pre>
+    </div>
+
+    <div class="panel">
+      <h2>Score</h2>
+      <div id="score-output"></div>
+      <div class="play-controls">
+        <button class="btn btn-play" id="play-btn" onclick="playTune()" disabled>▶ Play</button>
+        <button class="btn btn-stop" id="stop-btn" onclick="stopTune()" disabled>■ Stop</button>
+        <span id="play-status"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Cipher reference table ─────────────────────────────────────── -->
+  <section class="cipher-section">
+    <h2>Cipher Reference — <em>ab imo ad summum in breues, &amp; in semibreues, ab imo ad imum</em></h2>
+    <div class="cipher-grid">
+      <div class="cipher-half">
+        <h3 class="ascending-head">↑ Ascending — Breve (longer) &nbsp; a–m</h3>
+        <table id="asc-table"></table>
+      </div>
+      <div class="cipher-half">
+        <h3 class="descending-head">↓ Descending — Semibreve (shorter) &nbsp; n–z</h3>
+        <table id="desc-table"></table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Humanities Programming · University of Oxford ·
+  Score and audio rendered by <a href="https://www.abcjs.net" target="_blank" style="color:#aaa">abcjs</a>
+</footer>
+
+<!-- ── JavaScript ────────────────────────────────────────────────────── -->
+<script>
+// ── Porta cipher definition ─────────────────────────────────────────
+// Durations follow the primary source (p.156):
+//   Ascending (a–m)  → breve     = whole note  (4 beats in 4/4, ABC dur=4)
+//   Descending (n–z) → semibreve = half note   (2 beats in 4/4, ABC dur=2)
+// In ABC notation with L:1/4, dur=4 = whole note, dur=2 = half note.
+
+const CIPHER = [
+  // [letter, abc_note, abc_dur, note_label, direction]
+  ['A', 'E,', 4, 'E3', 'breve',     '↑'],
+  ['B', 'F,', 4, 'F3', 'breve',     '↑'],
+  ['C', 'G,', 4, 'G3', 'breve',     '↑'],
+  ['D', 'A,', 4, 'A3', 'breve',     '↑'],
+  ['E', 'B,', 4, 'B3', 'breve',     '↑'],
+  ['F', 'C',  4, 'C4', 'breve',     '↑'],
+  ['G', 'D',  4, 'D4', 'breve',     '↑'],
+  ['H', 'E',  4, 'E4', 'breve',     '↑'],
+  ['I', 'F',  4, 'F4', 'breve',     '↑'],
+  ['L', 'G',  4, 'G4', 'breve',     '↑'],
+  ['M', 'A',  4, 'A4', 'breve',     '↑'],
+  ['N', 'A',  2, 'A4', 'semibreve', '↓'],
+  ['O', 'G',  2, 'G4', 'semibreve', '↓'],
+  ['P', 'F',  2, 'F4', 'semibreve', '↓'],
+  ['Q', 'E',  2, 'E4', 'semibreve', '↓'],
+  ['R', 'D',  2, 'D4', 'semibreve', '↓'],
+  ['S', 'C',  2, 'C4', 'semibreve', '↓'],
+  ['T', 'B,', 2, 'B3', 'semibreve', '↓'],
+  ['U', 'A,', 2, 'A3', 'semibreve', '↓'],
+  ['X', 'G,', 2, 'G3', 'semibreve', '↓'],
+  ['Y', 'F,', 2, 'F3', 'semibreve', '↓'],
+  ['Z', 'E,', 2, 'E3', 'semibreve', '↓'],
+];
+
+// Build lookup map
+const ENCODE = {};
+CIPHER.forEach(([letter, abc, dur, note, type, dir]) => {
+  ENCODE[letter] = { abc, dur, note, type, dir };
+});
+
+// Normalise non-Latin letters to their Latin equivalents
+function normalise(ch) {
+  const map = { 'J': 'I', 'K': 'I', 'V': 'U', 'W': 'U' };
+  return map[ch] || ch;
+}
+
+// ── ABC string builder ───────────────────────────────────────────────
+function buildABC(text, tempo) {
+  const lines = text.toUpperCase().split('');
+  const noteTokens = [];
+  const skipped = [];
+
+  for (let ch of lines) {
+    const n = normalise(ch);
+    if (ENCODE[n]) {
+      const { abc, dur } = ENCODE[n];
+      // annotation "_X" places letter name below the notehead
+      noteTokens.push(`"_${ch}"${abc}${dur}`);
+    } else if (ch === ' ') {
+      // word break: double bar line
+      if (noteTokens.length > 0) noteTokens.push(' || ');
+    } else if (ch.match(/[A-Z]/)) {
+      skipped.push(ch);
+    }
+    // ignore punctuation/digits silently
+  }
+
+  if (noteTokens.length === 0) return null;
+
+  const header = [
+    'X:1',
+    'T:Porta Cipher',
+    'C:Giambattista della Porta (1602)',
+    'M:4/4',
+    'L:1/4',
+    `Q:1/4=${tempo}`,
+    'K:C',
+  ].join('\n');
+
+  const noteStr = noteTokens.join('') + '|]';
+  return { abc: header + '\n' + noteStr, skipped };
+}
+
+// ── Render score + update ABC display ───────────────────────────────
+let currentVisualObj = null;
+
+function updateScore() {
+  const text  = document.getElementById('plaintext').value;
+  const tempo = parseInt(document.getElementById('tempo').value);
+  const result = buildABC(text, tempo);
+
+  document.getElementById('error-msg').textContent =
+    (result && result.skipped.length)
+      ? `Skipped (not in 22-letter Latin alphabet): ${result.skipped.join(', ')}`
+      : '';
+
+  if (!result) {
+    document.getElementById('abc-output').textContent = '';
+    document.getElementById('score-output').innerHTML = '';
+    document.getElementById('play-btn').disabled = true;
+    document.getElementById('stop-btn').disabled = true;
+    highlightTable([]);
+    return;
+  }
+
+  // Pretty-print ABC with colour highlights on field names
+  document.getElementById('abc-output').textContent = result.abc;
+
+  currentVisualObj = ABCJS.renderAbc('score-output', result.abc, {
+    responsive: 'resize',
+    add_classes: true,
+    paddingbottom: 10,
+    paddingleft: 10,
+    paddingright: 10,
+    scale: 1.4,
+  });
+
+  document.getElementById('play-btn').disabled = false;
+
+  // Highlight used letters in the cipher table
+  const used = [...text.toUpperCase()].map(normalise).filter(c => ENCODE[c]);
+  highlightTable(used);
+}
+
+// ── Audio playback ───────────────────────────────────────────────────
+let activeSynth = null;
+
+async function playTune() {
+  stopTune();
+
+  if (!currentVisualObj || !currentVisualObj[0]) return;
+  if (!ABCJS.synth.supportsAudio()) {
+    setStatus('Web Audio not supported in this browser.');
+    return;
+  }
+
+  setStatus('Loading…');
+  document.getElementById('play-btn').disabled = true;
+  document.getElementById('stop-btn').disabled = false;
+
+  try {
+    const synth = new ABCJS.synth.CreateSynth();
+    await synth.init({
+      visualObj: currentVisualObj[0],
+      options: { program: 0 },   // 0 = grand piano
+    });
+    await synth.prime();
+    activeSynth = synth;
+    setStatus('Playing…');
+    synth.start();
+
+    // Re-enable play button when finished
+    const totalMs = currentVisualObj[0].getTotalTime
+      ? currentVisualObj[0].getTotalTime() * 1000
+      : 10000;
+    setTimeout(() => {
+      if (activeSynth === synth) {
+        activeSynth = null;
+        setStatus('');
+        document.getElementById('play-btn').disabled = false;
+        document.getElementById('stop-btn').disabled = true;
+      }
+    }, totalMs + 500);
+
+  } catch (e) {
+    setStatus('Audio error: ' + e.message);
+    document.getElementById('play-btn').disabled = false;
+    document.getElementById('stop-btn').disabled = true;
+  }
+}
+
+function stopTune() {
+  if (activeSynth) {
+    activeSynth.stop();
+    activeSynth = null;
+  }
+  setStatus('');
+  document.getElementById('play-btn').disabled = !currentVisualObj;
+  document.getElementById('stop-btn').disabled = true;
+}
+
+function setStatus(msg) {
+  document.getElementById('play-status').textContent = msg;
+}
+
+// ── Cipher reference table ────────────────────────────────────────────
+function buildTables() {
+  const asc  = CIPHER.filter(([,,,,type]) => type === 'breve');
+  const desc = CIPHER.filter(([,,,,type]) => type === 'semibreve');
+
+  function rows(group, tableId) {
+    const tbody = document.getElementById(tableId);
+    group.forEach(([letter, abc, dur, note, type, dir]) => {
+      const tr = document.createElement('tr');
+      tr.id = `row-${letter}`;
+      tr.innerHTML = `
+        <td class="letter-cell">${letter}</td>
+        <td class="note-cell">${note}</td>
+        <td class="dur-cell">${type}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  rows(asc,  'asc-table');
+  rows(desc, 'desc-table');
+}
+
+function highlightTable(usedLetters) {
+  // Clear all highlights
+  document.querySelectorAll('.cipher-half tr').forEach(tr => tr.classList.remove('active'));
+  // Highlight used letters
+  const unique = [...new Set(usedLetters)];
+  unique.forEach(ch => {
+    const row = document.getElementById(`row-${ch}`);
+    if (row) row.classList.add('active');
+  });
+}
+
+// ── Event listeners ───────────────────────────────────────────────────
+document.getElementById('plaintext').addEventListener('input', updateScore);
+
+document.getElementById('tempo').addEventListener('input', function() {
+  document.getElementById('tempo-val').textContent = this.value;
+  updateScore();  // re-render with new tempo
+});
+
+// ── Initialise ────────────────────────────────────────────────────────
+buildTables();
+// Pre-load with an example
+document.getElementById('plaintext').value = 'BODLEIAN';
+updateScore();
+</script>
+
+</body>
+</html>
