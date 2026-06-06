@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Porta's Musical Cipher</title>
-  <script src="https://cdn.jsdelivr.net/npm/abcjs@6.2.3/dist/abcjs-min.js"></script>
+  <script src="/static/abcjs-basic-min.js"></script>
   <style>
     /* ── Typography & base ───────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -258,8 +258,8 @@
     </div>
     <div class="tempo-row">
       <label for="tempo">Tempo:</label>
-      <input type="range" id="tempo" min="20" max="120" value="50">
-      <span id="tempo-val">50</span> BPM
+      <input type="range" id="tempo" min="40" max="200" value="80">
+      <span id="tempo-val">80</span> BPM
     </div>
     <p class="hint">Letters are uppercased automatically. J→I, K→I, V→U, W→U (Latin alphabet conventions). Spaces are ignored.</p>
     <div id="error-msg"></div>
@@ -311,34 +311,35 @@
 <script>
 // ── Porta cipher definition ─────────────────────────────────────────
 // Durations follow the primary source (p.156):
-//   Ascending (a–m)  → breve     = whole note  (4 beats in 4/4, ABC dur=4)
-//   Descending (n–z) → semibreve = half note   (2 beats in 4/4, ABC dur=2)
-// In ABC notation with L:1/4, dur=4 = whole note, dur=2 = half note.
+//   Ascending (a–m)  → breve     (longer)  — ABC dur=2 (half note)
+//   Descending (n–z) → semibreve (shorter) — ABC dur=1 (quarter note)
+// The 2:1 breve:semibreve ratio is preserved. With L:1/4 and Q:1/4=tempo,
+// a breve lasts 2 beats and a semibreve 1 beat.
 
 const CIPHER = [
   // [letter, abc_note, abc_dur, note_label, direction]
-  ['A', 'E,', 4, 'E3', 'breve',     '↑'],
-  ['B', 'F,', 4, 'F3', 'breve',     '↑'],
-  ['C', 'G,', 4, 'G3', 'breve',     '↑'],
-  ['D', 'A,', 4, 'A3', 'breve',     '↑'],
-  ['E', 'B,', 4, 'B3', 'breve',     '↑'],
-  ['F', 'C',  4, 'C4', 'breve',     '↑'],
-  ['G', 'D',  4, 'D4', 'breve',     '↑'],
-  ['H', 'E',  4, 'E4', 'breve',     '↑'],
-  ['I', 'F',  4, 'F4', 'breve',     '↑'],
-  ['L', 'G',  4, 'G4', 'breve',     '↑'],
-  ['M', 'A',  4, 'A4', 'breve',     '↑'],
-  ['N', 'A',  2, 'A4', 'semibreve', '↓'],
-  ['O', 'G',  2, 'G4', 'semibreve', '↓'],
-  ['P', 'F',  2, 'F4', 'semibreve', '↓'],
-  ['Q', 'E',  2, 'E4', 'semibreve', '↓'],
-  ['R', 'D',  2, 'D4', 'semibreve', '↓'],
-  ['S', 'C',  2, 'C4', 'semibreve', '↓'],
-  ['T', 'B,', 2, 'B3', 'semibreve', '↓'],
-  ['U', 'A,', 2, 'A3', 'semibreve', '↓'],
-  ['X', 'G,', 2, 'G3', 'semibreve', '↓'],
-  ['Y', 'F,', 2, 'F3', 'semibreve', '↓'],
-  ['Z', 'E,', 2, 'E3', 'semibreve', '↓'],
+  ['A', 'E',  2, 'E4', 'breve',     '↑'],
+  ['B', 'F',  2, 'F4', 'breve',     '↑'],
+  ['C', 'G',  2, 'G4', 'breve',     '↑'],
+  ['D', 'A',  2, 'A4', 'breve',     '↑'],
+  ['E', 'B',  2, 'B4', 'breve',     '↑'],
+  ['F', 'c',  2, 'C5', 'breve',     '↑'],
+  ['G', 'd',  2, 'D5', 'breve',     '↑'],
+  ['H', 'e',  2, 'E5', 'breve',     '↑'],
+  ['I', 'f',  2, 'F5', 'breve',     '↑'],
+  ['L', 'g',  2, 'G5', 'breve',     '↑'],
+  ['M', 'a',  2, 'A5', 'breve',     '↑'],
+  ['N', 'a',  1, 'A5', 'semibreve', '↓'],
+  ['O', 'g',  1, 'G5', 'semibreve', '↓'],
+  ['P', 'f',  1, 'F5', 'semibreve', '↓'],
+  ['Q', 'e',  1, 'E5', 'semibreve', '↓'],
+  ['R', 'd',  1, 'D5', 'semibreve', '↓'],
+  ['S', 'c',  1, 'C5', 'semibreve', '↓'],
+  ['T', 'B',  1, 'B4', 'semibreve', '↓'],
+  ['U', 'A',  1, 'A4', 'semibreve', '↓'],
+  ['X', 'G',  1, 'G4', 'semibreve', '↓'],
+  ['Y', 'F',  1, 'F4', 'semibreve', '↓'],
+  ['Z', 'E',  1, 'E4', 'semibreve', '↓'],
 ];
 
 // Build lookup map
@@ -386,7 +387,7 @@ function buildABC(text, tempo) {
     'K:C',
   ].join('\n');
 
-  const noteStr = noteTokens.join('') + '|]';
+  const noteStr = noteTokens.join(' ') + ' |]';
   return { abc: header + '\n' + noteStr, skipped };
 }
 
@@ -421,7 +422,6 @@ function updateScore() {
     paddingbottom: 10,
     paddingleft: 10,
     paddingright: 10,
-    scale: 1.4,
   });
 
   document.getElementById('play-btn').disabled = false;
@@ -448,9 +448,15 @@ async function playTune() {
   document.getElementById('stop-btn').disabled = false;
 
   try {
+    const audioContext = new AudioContext();
+    const mpm = currentVisualObj[0].millisecondsPerMeasure
+      ? currentVisualObj[0].millisecondsPerMeasure()
+      : undefined;
     const synth = new ABCJS.synth.CreateSynth();
     await synth.init({
+      audioContext,
       visualObj: currentVisualObj[0],
+      millisecondsPerMeasure: mpm,
       options: { program: 0 },   // 0 = grand piano
     });
     await synth.prime();
@@ -458,10 +464,16 @@ async function playTune() {
     setStatus('Playing…');
     synth.start();
 
-    // Re-enable play button when finished
-    const totalMs = currentVisualObj[0].getTotalTime
-      ? currentVisualObj[0].getTotalTime() * 1000
-      : 10000;
+    // Estimate total duration: count beats from the note tokens and use tempo
+    const tempoVal = parseInt(document.getElementById('tempo').value);
+    const text = document.getElementById('plaintext').value.toUpperCase();
+    let totalBeats = 0;
+    for (let ch of text) {
+      const enc = ENCODE[normalise(ch)];
+      if (enc) totalBeats += enc.dur;
+    }
+    const totalMs = (totalBeats / tempoVal) * 60000;
+
     setTimeout(() => {
       if (activeSynth === synth) {
         activeSynth = null;
@@ -469,7 +481,7 @@ async function playTune() {
         document.getElementById('play-btn').disabled = false;
         document.getElementById('stop-btn').disabled = true;
       }
-    }, totalMs + 500);
+    }, totalMs + 800);
 
   } catch (e) {
     setStatus('Audio error: ' + e.message);

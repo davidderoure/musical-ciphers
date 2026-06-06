@@ -58,10 +58,10 @@ A browser-based demo lets you type any text and instantly see the score and hear
 cd webapp
 pip install flask
 python app.py
-# open http://localhost:5000
+# open http://localhost:5050
 ```
 
-Features: live score rendering (abcjs), ABC notation display, audio playback, tempo control, and a cipher reference table that highlights the letters you are encoding.
+Features: live score rendering (abcjs), ABC notation display, audio playback, tempo control, and a cipher reference table that highlights the letters you are encoding. abcjs is bundled locally in `webapp/static/` — no CDN dependency.
 
 ---
 
