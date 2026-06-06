@@ -31,6 +31,7 @@ Bach embedded this in the final fugue of *The Art of Fugue* (BWV 1080, Contrapun
 |---|---|
 | [`bach_cipher.ipynb`](bach_cipher.ipynb) | Main tutorial notebook (start here) |
 | [`abegg_cipher.ipynb`](abegg_cipher.ipynb) | Comparison: Schumann's ABEGG cipher (English notation) |
+| [`porta_cipher.ipynb`](porta_cipher.ipynb) | Renaissance cipher: Porta's *De Furtivis Literarum Notis* (1563) |
 | [`complexity_sketch.ipynb`](complexity_sketch.ipynb) | Deeper dive: brute-force search and complexity analysis |
 | [`sample_bach_melody.mid`](sample_bach_melody.mid) | Sample MIDI file with the B-A-C-H motif hidden inside |
 | [`generate_sample_midi.py`](generate_sample_midi.py) | Script that generated the sample MIDI |
